@@ -59,6 +59,37 @@ export default function Admin() {
     }
   };
 
+  const handleEditGallery = (gallery: Gallery) => {
+    setEditingGallery(gallery);
+    editForm.reset({
+      name: gallery.name,
+      folderPath: gallery.folderPath,
+      description: gallery.description || "",
+      isPublic: gallery.isPublic || false,
+      allowDownload: gallery.allowDownload || true,
+    });
+  };
+
+  const handleUpdateGallery = async (data: UpdateGallery) => {
+    if (!editingGallery) return;
+
+    try {
+      await updateGallery.mutateAsync({ id: editingGallery.id, updates: data });
+      toast({
+        title: "Gallery Updated",
+        description: `Gallery "${data.name || editingGallery.name}" has been updated successfully.`,
+      });
+      setEditingGallery(null);
+      editForm.reset();
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "Failed to update gallery",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteGallery = async (id: number, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
       return;
@@ -187,7 +218,7 @@ export default function Admin() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="isPublic"
-                          checked={form.watch("isPublic")}
+                          checked={form.watch("isPublic") || false}
                           onCheckedChange={(checked) => form.setValue("isPublic", checked as boolean)}
                         />
                         <Label htmlFor="isPublic">Public Gallery</Label>
@@ -195,7 +226,7 @@ export default function Admin() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="allowDownload"
-                          checked={form.watch("allowDownload")}
+                          checked={form.watch("allowDownload") || false}
                           onCheckedChange={(checked) => form.setValue("allowDownload", checked as boolean)}
                         />
                         <Label htmlFor="allowDownload">Allow Downloads</Label>
@@ -280,7 +311,12 @@ export default function Admin() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleEditGallery(gallery)}
+                            >
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
@@ -364,6 +400,111 @@ export default function Admin() {
           )}
         </div>
       </div>
+
+      {/* Edit Gallery Modal */}
+      {editingGallery && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Edit className="w-5 h-5" />
+                  Edit Gallery
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setEditingGallery(null);
+                    editForm.reset();
+                  }}
+                  className="h-8 w-8 p-0"
+                >
+                  ×
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={editForm.handleSubmit(handleUpdateGallery)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Gallery Name</Label>
+                  <Input
+                    id="edit-name"
+                    placeholder="Enter gallery name"
+                    {...editForm.register("name")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-folderPath">Folder Path</Label>
+                  <Input
+                    id="edit-folderPath"
+                    placeholder="/photos/gallery-name"
+                    {...editForm.register("folderPath")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    placeholder="Gallery description..."
+                    rows={3}
+                    {...editForm.register("description")}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-isPublic"
+                      checked={editForm.watch("isPublic") || false}
+                      onCheckedChange={(checked) => editForm.setValue("isPublic", checked as boolean)}
+                    />
+                    <Label htmlFor="edit-isPublic">Public Gallery</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-allowDownload"
+                      checked={editForm.watch("allowDownload") || false}
+                      onCheckedChange={(checked) => editForm.setValue("allowDownload", checked as boolean)}
+                    />
+                    <Label htmlFor="edit-allowDownload">Allow Downloads</Label>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingGallery(null);
+                      editForm.reset();
+                    }}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={updateGallery.isPending}
+                    className="flex-1"
+                  >
+                    {updateGallery.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Gallery"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
