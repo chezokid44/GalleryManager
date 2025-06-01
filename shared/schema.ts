@@ -47,6 +47,7 @@ export const emailShareSchema = z.object({
 });
 
 export type InsertGallery = z.infer<typeof insertGallerySchema>;
+export type UpdateGallery = z.infer<typeof updateGallerySchema>;
 export type Gallery = typeof galleries.$inferSelect;
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
 export type Photo = typeof photos.$inferSelect;

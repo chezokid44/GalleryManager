@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import type { Gallery, InsertGallery } from "@shared/schema";
+import type { Gallery, InsertGallery, UpdateGallery } from "@shared/schema";
 
 export function useGalleries() {
   return useQuery<Gallery[]>({
@@ -21,6 +21,20 @@ export function useCreateGallery() {
   return useMutation({
     mutationFn: async (gallery: InsertGallery) => {
       const response = await apiRequest("POST", "/api/galleries", gallery);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/galleries"] });
+    },
+  });
+}
+
+export function useUpdateGallery() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: UpdateGallery }) => {
+      const response = await apiRequest("PATCH", `/api/galleries/${id}`, updates);
       return response.json();
     },
     onSuccess: () => {

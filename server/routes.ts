@@ -6,7 +6,7 @@ import nodemailer from "nodemailer";
 import path from "path";
 import fs from "fs/promises";
 import { storage } from "./storage";
-import { insertGallerySchema, insertPhotoSchema, emailShareSchema } from "@shared/schema";
+import { insertGallerySchema, updateGallerySchema, insertPhotoSchema, emailShareSchema } from "@shared/schema";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -77,6 +77,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(400).json({ error: error.message });
       } else {
         res.status(500).json({ error: "Failed to create gallery" });
+      }
+    }
+  });
+
+  app.patch("/api/galleries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = updateGallerySchema.parse(req.body);
+      
+      const gallery = await storage.updateGallery(id, validatedData);
+      if (!gallery) {
+        return res.status(404).json({ error: "Gallery not found" });
+      }
+      
+      res.json(gallery);
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to update gallery" });
       }
     }
   });

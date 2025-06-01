@@ -1,10 +1,11 @@
-import { galleries, photos, type Gallery, type Photo, type InsertGallery, type InsertPhoto } from "@shared/schema";
+import { galleries, photos, type Gallery, type Photo, type InsertGallery, type InsertPhoto, type UpdateGallery } from "@shared/schema";
 
 export interface IStorage {
   // Gallery operations
   createGallery(gallery: InsertGallery): Promise<Gallery>;
   getGalleries(): Promise<Gallery[]>;
   getGallery(id: number): Promise<Gallery | undefined>;
+  updateGallery(id: number, updates: UpdateGallery): Promise<Gallery | undefined>;
   deleteGallery(id: number): Promise<boolean>;
   
   // Photo operations
@@ -88,6 +89,19 @@ export class MemStorage implements IStorage {
 
   async getGallery(id: number): Promise<Gallery | undefined> {
     return this.galleries.get(id);
+  }
+
+  async updateGallery(id: number, updates: UpdateGallery): Promise<Gallery | undefined> {
+    const existing = this.galleries.get(id);
+    if (!existing) return undefined;
+
+    const updated: Gallery = {
+      ...existing,
+      ...updates,
+    };
+    
+    this.galleries.set(id, updated);
+    return updated;
   }
 
   async deleteGallery(id: number): Promise<boolean> {

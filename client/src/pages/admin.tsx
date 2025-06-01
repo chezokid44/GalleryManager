@@ -10,18 +10,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Settings, Plus, Upload, Image, Edit, Trash2, Calendar, Loader2 } from "lucide-react";
 import { UploadForm } from "@/components/upload-form";
-import { useGalleries, useCreateGallery, useDeleteGallery } from "@/hooks/use-galleries";
+import { useGalleries, useCreateGallery, useUpdateGallery, useDeleteGallery } from "@/hooks/use-galleries";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGallerySchema } from "@shared/schema";
-import type { InsertGallery } from "@shared/schema";
+import { insertGallerySchema, updateGallerySchema } from "@shared/schema";
+import type { InsertGallery, UpdateGallery, Gallery } from "@shared/schema";
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState<"galleries" | "upload" | "settings">("galleries");
+  const [editingGallery, setEditingGallery] = useState<Gallery | null>(null);
   
   const { data: galleries = [], isLoading: galleriesLoading } = useGalleries();
   const createGallery = useCreateGallery();
+  const updateGallery = useUpdateGallery();
   const deleteGallery = useDeleteGallery();
   const { toast } = useToast();
 
@@ -34,6 +36,10 @@ export default function Admin() {
       isPublic: false,
       allowDownload: true,
     },
+  });
+
+  const editForm = useForm<UpdateGallery>({
+    resolver: zodResolver(updateGallerySchema),
   });
 
   const handleCreateGallery = async (data: InsertGallery) => {
