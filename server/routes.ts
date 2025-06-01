@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import nodemailer from "nodemailer";
@@ -18,13 +19,13 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only images are allowed.'), false);
+      cb(new Error('Invalid file type. Only images are allowed.'));
     }
   },
 });
 
 // Configure nodemailer
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: parseInt(process.env.SMTP_PORT || "587"),
   secure: false,
@@ -36,7 +37,7 @@ const transporter = nodemailer.createTransporter({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded files
-  app.use("/uploads", require("express").static("uploads"));
+  app.use("/uploads", express.static("uploads"));
 
   // Gallery routes
   app.get("/api/galleries", async (req, res) => {

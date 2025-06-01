@@ -68,8 +68,12 @@ export class MemStorage implements IStorage {
 
   async createGallery(insertGallery: InsertGallery): Promise<Gallery> {
     const gallery: Gallery = {
-      ...insertGallery,
       id: this.currentGalleryId++,
+      name: insertGallery.name,
+      folderPath: insertGallery.folderPath,
+      description: insertGallery.description || null,
+      isPublic: insertGallery.isPublic ?? false,
+      allowDownload: insertGallery.allowDownload ?? true,
       createdAt: new Date(),
     };
     this.galleries.set(gallery.id, gallery);
@@ -96,8 +100,13 @@ export class MemStorage implements IStorage {
 
   async createPhoto(insertPhoto: InsertPhoto): Promise<Photo> {
     const photo: Photo = {
-      ...insertPhoto,
       id: this.currentPhotoId++,
+      galleryId: insertPhoto.galleryId,
+      filename: insertPhoto.filename,
+      originalName: insertPhoto.originalName,
+      path: insertPhoto.path,
+      size: insertPhoto.size,
+      mimeType: insertPhoto.mimeType,
       createdAt: new Date(),
     };
     this.photos.set(photo.id, photo);
