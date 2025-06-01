@@ -28,6 +28,11 @@ export const insertGallerySchema = createInsertSchema(galleries).omit({
   createdAt: true,
 });
 
+export const updateGallerySchema = createInsertSchema(galleries).omit({
+  id: true,
+  createdAt: true,
+}).partial();
+
 export const insertPhotoSchema = createInsertSchema(photos).omit({
   id: true,
   createdAt: true,
