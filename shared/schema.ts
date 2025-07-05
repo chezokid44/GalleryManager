@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -22,6 +23,17 @@ export const photos = pgTable("photos", {
   mimeType: text("mime_type").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const galleriesRelations = relations(galleries, ({ many }) => ({
+  photos: many(photos),
+}));
+
+export const photosRelations = relations(photos, ({ one }) => ({
+  gallery: one(galleries, {
+    fields: [photos.galleryId],
+    references: [galleries.id],
+  }),
+}));
 
 export const insertGallerySchema = createInsertSchema(galleries).omit({
   id: true,

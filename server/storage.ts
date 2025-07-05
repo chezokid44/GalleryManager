@@ -1,4 +1,6 @@
 import { galleries, photos, type Gallery, type Photo, type InsertGallery, type InsertPhoto, type UpdateGallery } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Gallery operations
@@ -142,4 +144,66 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  async getGalleries(): Promise<Gallery[]> {
+    return await db.select().from(galleries).orderBy(galleries.createdAt);
+  }
+
+  async getGallery(id: number): Promise<Gallery | undefined> {
+    const [gallery] = await db.select().from(galleries).where(eq(galleries.id, id));
+    return gallery || undefined;
+  }
+
+  async createGallery(insertGallery: InsertGallery): Promise<Gallery> {
+    const [gallery] = await db
+      .insert(galleries)
+      .values(insertGallery)
+      .returning();
+    return gallery;
+  }
+
+  async updateGallery(id: number, updates: UpdateGallery): Promise<Gallery | undefined> {
+    const [gallery] = await db
+      .update(galleries)
+      .set(updates)
+      .where(eq(galleries.id, id))
+      .returning();
+    return gallery || undefined;
+  }
+
+  async deleteGallery(id: number): Promise<boolean> {
+    // Delete all photos in gallery first
+    await db.delete(photos).where(eq(photos.galleryId, id));
+    
+    const result = await db.delete(galleries).where(eq(galleries.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getPhotosByGallery(galleryId: number): Promise<Photo[]> {
+    return await db
+      .select()
+      .from(photos)
+      .where(eq(photos.galleryId, galleryId))
+      .orderBy(photos.createdAt);
+  }
+
+  async getPhoto(id: number): Promise<Photo | undefined> {
+    const [photo] = await db.select().from(photos).where(eq(photos.id, id));
+    return photo || undefined;
+  }
+
+  async createPhoto(insertPhoto: InsertPhoto): Promise<Photo> {
+    const [photo] = await db
+      .insert(photos)
+      .values(insertPhoto)
+      .returning();
+    return photo;
+  }
+
+  async deletePhoto(id: number): Promise<boolean> {
+    const result = await db.delete(photos).where(eq(photos.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+}
+
+export const storage = new DatabaseStorage();
